@@ -1,0 +1,14 @@
+[
+  {"name": "salt_line_deployer", "counters": "phantoms, spectres and apparitions that cross thresholds", "lore": "An unbroken salt line seals a doorway; spirits cannot cross it while it holds.", "risk": "breaks if trampled during evacuation"},
+  {"name": "uv_lanterns", "counters": "shadow entities and phantoms that avoid light", "lore": "Ultraviolet light pins down shadow-bodied entities and makes residual echoes visible.", "risk": "short battery life"},
+  {"name": "iron_filings_barrier", "counters": "fae, poltergeists and entities repelled by cold iron", "lore": "Cold iron disrupts the binding of restless spirits; a ring of filings holds them in place.", "risk": "slow to lay down"},
+  {"name": "faraday_curtain", "counters": "entities feeding on electricity, network haunts and EMF surges", "lore": "A grounded mesh starves electrically active hauntings of the field they feed on.", "risk": "takes local network nodes offline"},
+  {"name": "thermal_flares", "counters": "cold spots and entities that drain heat from a room", "lore": "Sudden heat breaks the cold anchor a phantom draws strength from.", "risk": "smoke alarms may trigger"},
+  {"name": "sage_smudge_drone", "counters": "lingering residual echoes and low-level apparitions", "lore": "A drone carries smudging smoke through vents to clear residue without sending people in.", "risk": "weak against level-4 and above"},
+  {"name": "sound_bath_speaker", "counters": "poltergeists that answer to rhythm, voice bleed and audio echoes", "lore": "A steady low tone out-of-phase with the entity's knocking calms poltergeist activity.", "risk": "loud; masks real distress calls"},
+  {"name": "mirror_trap", "counters": "possession and entities that follow reflections", "lore": "An angled mirror lures a possessing spirit out of its host and into the glass.", "risk": "the mirror must be broken and buried after"},
+  {"name": "holy_water_sprinklers", "counters": "demonic entities and possession", "lore": "Blessed water through the fire sprinklers drives out demonic presences sector-wide.", "risk": "soaks every laptop in the sector"},
+  {"name": "decoy_pumpkins", "counters": "mobile phantoms that chase warmth and people", "lore": "Warm carved decoys draw a mobile entity away from pinned civilians.", "risk": "only buys minutes"},
+  {"name": "bell_book_candle", "counters": "high-level phantoms and full manifestations", "lore": "The old rite: ring, read, snuff. Banishes level-5 entities if completed uninterrupted.", "risk": "needs three operators for four minutes"},
+  {"name": "fog_machine_shutoff", "counters": "false alarms caused by party effects, fog and lighting rigs", "lore": "Most 'sightings' at an event are the fog machine. Cut it and re-check the sensors.", "risk": "none"}
+]

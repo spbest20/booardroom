@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boo-ard Room</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 4C18 4 10 15 10 28v30l7-6 7 6 8-6 8 6 7-6 7 6V28C54 15 46 4 32 4z' fill='%23b18cff'/%3E%3Ccircle cx='24' cy='28' r='5' fill='%230d0a14'/%3E%3Ccircle cx='40' cy='28' r='5' fill='%230d0a14'/%3E%3C/svg%3E">
+<style>
+:root, body[data-theme="spectral-goth-dark"] {
+  --bg: #0d0a14; --bg2: #140f1f; --panel: #19132a; --panel2: #211938; --line: #33284d;
+  --text: #efe9f8; --muted: #a497bd; --accent: #b18cff; --accent2: #7cffb2;
+  --danger: #ff6b3d; --warn: #ffc857; --ok: #7cffb2; --glow: rgba(177,140,255,.35);
+}
+body[data-theme="blood-moon"] {
+  --bg: #120607; --bg2: #1a090b; --panel: #220c10; --panel2: #2d1016; --line: #4a1a22;
+  --text: #fbecec; --muted: #c79a9f; --accent: #ff4d5e; --accent2: #ffb347;
+  --danger: #ff4d5e; --warn: #ffb347; --ok: #8ff0b8; --glow: rgba(255,77,94,.35);
+}
+body[data-theme="ecto-green"] {
+  --bg: #050f0b; --bg2: #08170f; --panel: #0c1f16; --panel2: #112b1f; --line: #1f4434;
+  --text: #e8fbf1; --muted: #8fbfa6; --accent: #7cffb2; --accent2: #b18cff;
+  --danger: #ff6b3d; --warn: #ffd35c; --ok: #7cffb2; --glow: rgba(124,255,178,.3);
+}
+body[data-theme="calm-dawn"] {
+  --bg: #11131d; --bg2: #161a28; --panel: #1c2132; --panel2: #232a40; --line: #343d5a;
+  --text: #f3f1ea; --muted: #a9adc2; --accent: #ffd59e; --accent2: #9ef0c6;
+  --danger: #ff8a6b; --warn: #ffd59e; --ok: #9ef0c6; --glow: rgba(255,213,158,.28);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: radial-gradient(1200px 600px at 70% -10%, var(--glow), transparent 60%), var(--bg);
+  color: var(--text);
+  font: 15px/1.45 ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", sans-serif;
+  min-height: 100vh; transition: background-color .8s ease;
+  overflow-x: hidden;
+}
+body::before { /* drifting fog */
+  content: ""; position: fixed; inset: -20%; pointer-events: none; z-index: 0; opacity: .35;
+  background:
+    radial-gradient(40% 25% at 20% 80%, var(--glow), transparent 70%),
+    radial-gradient(30% 20% at 80% 60%, var(--glow), transparent 70%);
+  animation: fog 28s ease-in-out infinite alternate;
+}
+@keyframes fog { to { transform: translate3d(6%, -4%, 0) scale(1.1); } }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+button { font: inherit; color: inherit; cursor: pointer; }
+a { color: var(--accent); }
+
+header {
+  position: relative; z-index: 2; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  padding: 14px 22px; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--bg) 80%, transparent);
+  backdrop-filter: blur(6px);
+}
+.logo { width: 38px; height: 38px; animation: bob 3.2s ease-in-out infinite; filter: drop-shadow(0 0 10px var(--glow)); }
+@keyframes bob { 50% { transform: translateY(-4px) rotate(-3deg); } }
+.brand h1 { margin: 0; font-size: 20px; letter-spacing: .14em; text-transform: uppercase; font-weight: 800; }
+.brand h1 span { color: var(--accent); text-shadow: 0 0 18px var(--glow); }
+.brand p { margin: 0; font-size: 12px; color: var(--muted); letter-spacing: .04em; }
+.pills { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+.pill { font-size: 11px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); background: var(--panel); white-space: nowrap; }
+.pill.live { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 45%, transparent); }
+.pill.live::before { content: "●"; margin-right: 5px; animation: blink 1.6s infinite; }
+.pill.off { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 45%, transparent); }
+@keyframes blink { 50% { opacity: .25; } }
+
+.layout { position: relative; z-index: 1; display: grid; grid-template-columns: 330px 1fr; gap: 20px; padding: 20px 22px 40px; max-width: 1500px; margin: 0 auto; }
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; padding: 16px; } header { padding: 12px 16px; } }
+
+/* --- intake ------------------------------------------------------------ */
+aside { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.box { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 16px; }
+.box h2 { margin: 0 0 10px; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+textarea {
+  width: 100%; min-height: 120px; resize: vertical; border-radius: 12px; border: 1px solid var(--line);
+  background: var(--bg2); color: var(--text); padding: 12px; font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.summon {
+  margin-top: 10px; width: 100%; padding: 12px 14px; border: 0; border-radius: 12px; font-weight: 800; letter-spacing: .06em;
+  background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 55%, var(--accent2))); color: #120b1c;
+  box-shadow: 0 6px 24px var(--glow); transition: transform .15s, filter .15s;
+}
+.summon:hover { transform: translateY(-1px); filter: brightness(1.08); }
+.summon:disabled { filter: grayscale(.7) brightness(.7); cursor: progress; transform: none; }
+.hint { font-size: 11px; color: var(--muted); margin-top: 6px; text-align: center; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.chip { font-size: 12px; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel2); transition: border-color .2s; }
+.chip:hover { border-color: var(--accent); }
+.play { width: 100%; padding: 10px; border-radius: 12px; border: 1px dashed var(--accent); background: transparent; color: var(--accent); font-weight: 700; }
+.play:disabled { opacity: .5; cursor: progress; }
+.timeline { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; max-height: 330px; overflow: auto; }
+.timeline li { border-left: 2px solid var(--line); padding: 4px 0 4px 10px; font-size: 12px; color: var(--muted); cursor: pointer; transition: border-color .2s, color .2s; }
+.timeline li:hover, .timeline li.on { border-color: var(--accent); color: var(--text); }
+.timeline time { display: block; font-size: 10px; letter-spacing: .08em; color: var(--accent); }
+.timeline .empty { cursor: default; border: 0; padding: 0; }
+
+/* --- station ----------------------------------------------------------- */
+.station { min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.seance { background: linear-gradient(180deg, var(--panel2), var(--panel)); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; }
+.stages { display: flex; gap: 6px; flex-wrap: wrap; }
+.stage { flex: 1 1 110px; display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 10px; background: var(--bg2); border: 1px solid var(--line); font-size: 12px; color: var(--muted); transition: all .3s; }
+.stage b { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+.stage .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line); flex: none; }
+.stage.run { color: var(--text); border-color: var(--accent); box-shadow: 0 0 18px var(--glow); }
+.stage.run .dot { background: var(--accent); animation: blink .7s infinite; }
+.stage.ok { color: var(--text); }
+.stage.ok .dot { background: var(--ok); }
+.stage small { display: block; font-size: 10px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
+.whisper { margin-top: 10px; height: 38px; overflow: hidden; font: italic 12px/1.5 ui-monospace, Menlo, monospace; color: var(--muted);
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+.whisper span { display: inline-block; white-space: nowrap; animation: drift 6s linear; }
+@keyframes drift { from { opacity: 0; transform: translateX(12px); } 15% { opacity: .95; } to { opacity: .6; transform: translateX(-8px); } }
+.facts { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.fact { font-size: 11px; padding: 3px 8px; border-radius: 6px; background: var(--bg2); border: 1px solid var(--line); color: var(--muted); }
+.fact b { color: var(--text); }
+.headline { margin: 4px 2px 0; font-size: clamp(20px, 2.6vw, 30px); font-weight: 800; letter-spacing: .01em; text-shadow: 0 0 26px var(--glow); min-height: 1.2em; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px; }
+.card {
+  position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px 16px; min-width: 0;
+  animation: materialize .7s cubic-bezier(.2,.8,.2,1) both; transition: border-color .4s, box-shadow .4s, opacity .4s, transform .4s;
+}
+.card.wide { grid-column: 1 / -1; }
+.card.tall { grid-row: span 2; }
+@media (max-width: 640px) { .card.tall { grid-row: auto; } }
+.card.changed { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 0 30px var(--glow); }
+.card.leaving { opacity: 0; transform: scale(.96); }
+@keyframes materialize {
+  0% { opacity: 0; transform: translateY(14px) scale(.97); filter: blur(6px); }
+  40% { opacity: .5; } 55% { opacity: .2; } 70% { opacity: 1; filter: blur(0); }
+  to { opacity: 1; transform: none; }
+}
+.card .kind { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
+.card .kind i { font-style: normal; color: var(--accent); }
+.card h3 { margin: 4px 0 10px; font-size: 16px; }
+.big { font-size: 40px; font-weight: 800; line-height: 1; letter-spacing: -.02em; }
+.big small { font-size: 14px; color: var(--muted); font-weight: 600; margin-left: 4px; }
+.status-ok { color: var(--ok); } .status-warning { color: var(--warn); } .status-danger { color: var(--danger); }
+.tag { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 3px 8px; border-radius: 6px; border: 1px solid currentColor; }
+.muted { color: var(--muted); font-size: 13px; }
+
+.banner { display: flex; gap: 16px; align-items: center; background: linear-gradient(110deg, color-mix(in srgb, var(--danger) 22%, var(--panel)), var(--panel) 65%); }
+.banner.sev-low { background: linear-gradient(110deg, color-mix(in srgb, var(--warn) 14%, var(--panel)), var(--panel) 65%); }
+.banner .ghost { width: 64px; height: 64px; flex: none; animation: bob 2.4s ease-in-out infinite; }
+.banner .line { font-size: clamp(18px, 2.2vw, 24px); font-weight: 800; margin: 2px 0 6px; }
+.sev-critical .line { animation: glitch 2.8s infinite; }
+@keyframes glitch { 0%, 92%, 100% { text-shadow: none; transform: none; } 93% { text-shadow: -2px 0 var(--danger), 2px 0 var(--accent2); transform: translateX(1px); } 96% { text-shadow: 2px 0 var(--danger), -2px 0 var(--accent2); transform: translateX(-1px); } }
+
+.radar { display: grid; grid-template-columns: 150px 1fr; gap: 14px; align-items: center; }
+.radar canvas { width: 150px; height: 150px; }
+.thermo { display: grid; grid-template-columns: 56px 1fr; gap: 14px; align-items: center; }
+.floor svg { width: 100%; height: auto; display: block; }
+.floor .room { fill: var(--bg2); stroke: var(--line); stroke-width: 2; transition: fill .6s; }
+.floor .room.hot { fill: color-mix(in srgb, var(--danger) 30%, var(--bg2)); stroke: var(--danger); animation: pulse 1.4s ease-in-out infinite; }
+.floor .room.sealed { fill: url(#hatch); stroke: var(--warn); stroke-dasharray: 6 4; }
+@keyframes pulse { 50% { fill: color-mix(in srgb, var(--danger) 45%, var(--bg2)); } }
+.floor text { fill: var(--muted); font: 600 10px ui-monospace, Menlo, monospace; letter-spacing: .06em; text-transform: uppercase; pointer-events: none; }
+.floor .sealtxt { fill: var(--warn); font-size: 9px; }
+.floor .ghostmark { animation: haunt 3s ease-in-out infinite; transform-box: fill-box; transform-origin: center; filter: drop-shadow(0 0 6px var(--glow)); }
+@keyframes haunt { 50% { transform: translate(4px, -6px) rotate(4deg); } }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 11px; color: var(--muted); margin-top: 8px; }
+.legend span::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; background: var(--c); }
+
+.people { display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0; }
+.person { width: 18px; height: 26px; position: relative; }
+.person::before { content: ""; position: absolute; left: 5px; top: 0; width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+.person::after { content: ""; position: absolute; left: 2px; top: 10px; width: 14px; height: 16px; border-radius: 7px 7px 3px 3px; background: var(--c); }
+.person.pinned { --c: var(--danger); animation: shake .5s infinite; } .person.safe { --c: var(--ok); }
+@keyframes shake { 25% { transform: translateX(-1px); } 75% { transform: translateX(1px); } }
+
+.nodes { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin: 10px 0; }
+.node { aspect-ratio: 1; border-radius: 6px; background: color-mix(in srgb, var(--ok) 25%, var(--bg2)); border: 1px solid color-mix(in srgb, var(--ok) 50%, transparent); }
+.node.down { background: color-mix(in srgb, var(--danger) 35%, var(--bg2)); border-color: var(--danger); animation: flick 1.1s steps(2) infinite; }
+@keyframes flick { 50% { opacity: .35; } }
+
+.options { display: flex; flex-direction: column; gap: 8px; }
+.option { text-align: left; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg2); transition: all .2s; }
+.option:hover { border-color: var(--accent); }
+.option.sel { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, var(--bg2)); box-shadow: 0 0 18px var(--glow); }
+.option b { display: block; font-size: 14px; }
+.option span { font-size: 12px; color: var(--muted); }
+.option em { float: right; font-style: normal; font-size: 10px; letter-spacing: .1em; color: var(--accent); }
+
+.claims { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-direction: column; gap: 8px; }
+.claims li { font-size: 13px; padding: 8px 10px; border-radius: 10px; background: var(--bg2); }
+.claims a { display: inline-block; margin-top: 4px; font-size: 11px; text-decoration: none; padding: 2px 7px; border-radius: 6px; border: 1px solid var(--line); }
+
+.dispatch textarea { min-height: 70px; }
+.fire {
+  margin-top: 10px; width: 100%; padding: 14px; border: 0; border-radius: 12px; font-weight: 900; letter-spacing: .12em; font-size: 15px;
+  background: var(--danger); color: #1a0505; box-shadow: 0 6px 28px color-mix(in srgb, var(--danger) 45%, transparent);
+}
+.fire:hover { filter: brightness(1.1); }
+.fire:disabled { filter: grayscale(.6); cursor: progress; }
+.result { margin-top: 8px; font-size: 12px; }
+
+.calm { display: flex; gap: 18px; align-items: center; background: linear-gradient(110deg, color-mix(in srgb, var(--ok) 14%, var(--panel)), var(--panel) 70%); }
+.calm .ghost { width: 70px; height: 70px; flex: none; animation: bob 4s ease-in-out infinite; }
+
+.empty-state { text-align: center; padding: 60px 20px; color: var(--muted); border: 1px dashed var(--line); border-radius: 18px; }
+.empty-state svg { width: 96px; height: 96px; animation: bob 3s ease-in-out infinite; filter: drop-shadow(0 0 16px var(--glow)); }
+.empty-state h2 { color: var(--text); margin: 10px 0 4px; }
+.searching { animation: blink 1.4s infinite; }
+.toast { position: fixed; right: 18px; bottom: 18px; z-index: 9; max-width: 380px; padding: 12px 14px; border-radius: 12px; background: var(--panel2); border: 1px solid var(--danger); font-size: 13px; display: none; }
+.toast.show { display: block; animation: materialize .4s both; }
+.tools { display: flex; gap: 8px; }
+.tools button { flex: 1; padding: 8px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel2); font-size: 12px; }
+.tip { position: fixed; z-index: 30; max-width: 300px; padding: 10px 12px; border-radius: 10px; background: var(--panel2); border: 1px solid var(--accent);
+  color: var(--text); font-size: 12.5px; line-height: 1.45; box-shadow: 0 10px 30px rgba(0,0,0,.45); pointer-events: none; opacity: 0; transform: translateY(4px); transition: opacity .12s, transform .12s; }
+.tip.show { opacity: 1; transform: none; }
+.tip b { display: block; margin-bottom: 3px; font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+[data-tip]:not(button):not(textarea):not(a) { cursor: help; }
+.help-btn { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--accent); background: transparent; color: var(--accent); font-weight: 800; }
+dialog.help { max-width: 560px; width: calc(100% - 32px); border: 1px solid var(--accent); border-radius: 18px; background: var(--panel); color: var(--text); padding: 22px 24px; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
+dialog.help::backdrop { background: rgba(5, 3, 10, .6); backdrop-filter: blur(2px); }
+dialog.help h2 { margin: 0 0 6px; font-size: 20px; }
+dialog.help ol { padding-left: 20px; margin: 12px 0; display: flex; flex-direction: column; gap: 8px; }
+dialog.help .close { float: right; border: 1px solid var(--line); background: var(--panel2); border-radius: 10px; padding: 6px 12px; }
+kbd { font: 11px ui-monospace, Menlo, monospace; padding: 1px 5px; border-radius: 4px; border: 1px solid var(--line); background: var(--bg2); }
+@media (prefers-reduced-motion: reduce) { *, *::before { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body data-theme="spectral-goth-dark">
+<header>
+  <svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 4C18 4 10 15 10 28v30l7-6 7 6 8-6 8 6 7-6 7 6V28C54 15 46 4 32 4z" fill="var(--accent)"/><circle cx="24" cy="28" r="5" fill="var(--bg)"/><circle cx="40" cy="28" r="5" fill="var(--bg)"/><ellipse cx="32" cy="42" rx="5" ry="3" fill="var(--bg)"/></svg>
+  <div class="brand">
+    <h1>Boo<span>-ard</span> Room</h1>
+    <p>Spooky Tactical Command Station · AWS Builder Loft, 525 Market St</p>
+  </div>
+  <div class="pills">
+    <span class="pill" id="conn" data-tip-title="Connection" data-tip="Green means you are connected to the station server, so new reports are laid out live. Offline means you are looking at the last saved state.">connecting…</span>
+    <span class="pill" id="mode" data-tip-title="Dispatch mode" data-tip="LIVE: the Dispatch button posts to the venue&#39;s #loft-incident Discord channel. Dry run: it only shows the message. Set DISPATCH_MODE in .env.">dispatch: …</span>
+    <span class="pill mono" id="model" data-tip-title="Layout model" data-tip="The Parasail model laying out the station. It switches to a backup model automatically when the shared engine is overloaded.">model: …</span>
+    <button class="help-btn" id="helpBtn" aria-label="How the station works" data-tip-title="Quick guide" data-tip="What this station is and how to use it, in 30 seconds. Shortcut: ?">?</button>
+  </div>
+</header>
+
+<div class="layout">
+  <aside>
+    <section class="box">
+      <h2>Report an incident</h2>
+      <textarea id="intake" data-tip-title="Incident report" data-tip="Paste anything: a raw log, a panicked chat message. The station reads it and builds the panels you need." placeholder="Paste a raw incident log, a panicked Slack message, anything…"></textarea>
+      <button class="summon" id="summon" data-tip-title="Summon" data-tip="Sends the report through the pipeline: read, route, research, then the model lays out the station. A second report updates the station instead of starting over.">SUMMON THE STATION</button>
+      <div class="hint">Ctrl/⌘ + Enter · every new report updates the station in place</div>
+      <div class="chips" id="presets"></div>
+    </section>
+    <section class="box">
+      <h2>Live incident stream</h2>
+      <button class="play" id="play" data-tip-title="Play the night" data-tip="Feeds four reports in a row, a moment after each finishes, so you can watch the station escalate, update in place and stand down.">▶ Play the night (4 reports)</button>
+    </section>
+    <section class="box">
+      <h2>Timeline · click to rewind</h2>
+      <ul class="timeline" id="timeline" data-tip-title="Timeline" data-tip="Every report you have run, newest first. Click one to rewind the station to exactly how it looked then."><li class="empty">Nothing yet. The loft is quiet… for now.</li></ul>
+    </section>
+    <section class="box tools">
+      <button id="export" data-tip-title="Export snapshot" data-tip="Downloads this station, with its whole timeline, as one HTML file that opens anywhere with no server or network.">⤓ Export snapshot</button>
+      <button id="reset" data-tip-title="New incident" data-tip="Forgets the previous reports, so the next one starts a fresh station.">↺ New incident</button>
+    </section>
+  </aside>
+
+  <main class="station">
+    <section class="seance" aria-live="polite">
+      <div class="stages" id="stages"></div>
+      <div class="whisper mono" id="whisper" data-tip-title="Whispers" data-tip="The model&#39;s reasoning and the Field Researcher&#39;s searches, streamed live while they work."></div>
+      <div class="facts" id="facts" data-tip-title="Extracted facts" data-tip="What the Intake Analyst read out of the report. Plain numbers like 98 mG are double-checked by code."></div>
+    </section>
+    <h2 class="headline" id="headline" data-tip-title="Headline" data-tip="Written by the model for this incident, along with the colour theme."></h2>
+    <div class="grid" id="grid">
+      <div class="empty-state card wide" id="empty">
+        <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 4C18 4 10 15 10 28v30l7-6 7 6 8-6 8 6 7-6 7 6V28C54 15 46 4 32 4z" fill="var(--accent)"/><circle cx="24" cy="28" r="5" fill="var(--bg)"/><circle cx="40" cy="28" r="5" fill="var(--bg)"/></svg>
+        <h2>The station is waiting for a haunting</h2>
+        <p>Report an incident, pick a preset, or play the night. The model reads the chaos and builds the interface you need, live.</p>
+        <p class="muted">Hover anything to see what it does, or press <kbd>?</kbd> for a quick guide.</p>
+      </div>
+    </div>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+<dialog class="help" id="help" aria-labelledby="helpTitle">
+  <button class="close" id="helpClose">Close</button>
+  <h2 id="helpTitle">How the Boo-ard Room works</h2>
+  <p class="muted">A command station that designs its own interface from a messy incident report.</p>
+  <ol>
+    <li><b>Report.</b> Paste a report or pick a preset on the left, then press Summon.</li>
+    <li><b>Watch it think.</b> The stages light up: the Intake Analyst reads the facts, the CrewAI Flow routes it, the Field Researcher checks the readings on You.com, and Parasail lays out the station.</li>
+    <li><b>Read the station.</b> The model chose every panel, its order and the theme. People in danger come first.</li>
+    <li><b>Act.</b> Pick a counter-measure and press Dispatch to alert #loft-incident.</li>
+  </ol>
+  <p class="muted">Send another report to update the station in place, or click the timeline to rewind. Hover anything for an explanation.</p>
+</dialog>
+
+<script src="snapshot.js"></script>
+<script>
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const label = s => String(s || "").replaceAll("_", " ");
+const STORE = "booard-room-snapshots";
+const store = {
+  load() { try { return JSON.parse(localStorage.getItem(STORE) || "[]"); } catch { return []; } },
+  save(v) { try { localStorage.setItem(STORE, JSON.stringify(v.slice(-30))); } catch {} },
+};
+
+// ---------- pipeline stages -------------------------------------------------
+const STAGES = [["read", "Read", "Intake Analyst agent"], ["route", "Route", "CrewAI Flow router"], ["ground", "Ground", "Researcher agent + lore"], ["compose", "Compose", "Parasail stream"], ["done", "Dispatch-ready", "#loft-incident"]];
+const STAGE_TIPS = {
+  read: "A CrewAI agent on Parasail turns the raw text into structured facts. It runs on two models at once and keeps the first answer.",
+  route: "A CrewAI Flow router: false alarms take the calm path, everything else the haunting path.",
+  ground: "The Field Researcher agent picks up to two You.com searches for real-world explanations, while Parasail embeddings pick counter-measures from the lore library.",
+  compose: "Parasail streams the layout as JSON. Each panel is checked and drawn the moment it is complete.",
+  done: "The station is ready. Use the Dispatch panel to alert #loft-incident.",
+};
+function drawStages() {
+  $("#stages").innerHTML = STAGES.map(([id, name, who]) => `<div class="stage" data-s="${id}" data-tip-title="${name}" data-tip="${STAGE_TIPS[id]}"><span class="dot"></span><div><b>${name}</b><small>${who}</small></div></div>`).join("");
+}
+function stage(id, detail) {
+  const order = STAGES.map(s => s[0]);
+  const at = order.indexOf(id);
+  document.querySelectorAll(".stage").forEach(el => {
+    const i = order.indexOf(el.dataset.s);
+    el.classList.toggle("ok", i < at || id === "done");
+    el.classList.toggle("run", i === at && id !== "done");
+    if (i === at && detail) el.querySelector("small").textContent = detail;
+  });
+}
+function whisper(text) {
+  const t = text.replace(/\s+/g, " ").trim(); if (!t) return;
+  $("#whisper").innerHTML = `<span>“${esc(t.slice(-140))}”</span>`;
+}
+function facts(f) {
+  const bits = [["class", label(f.incident_class)], ["entity", f.entity], ["sector", label(f.sector)],
+    f.emf_mg != null && ["EMF", f.emf_mg + " mG"], f.temp_c != null && ["temp", f.temp_c + " °C"], ["pinned", f.civilians_pinned]].filter(Boolean);
+  $("#facts").innerHTML = bits.map(([k, v]) => `<span class="fact">${k} <b>${esc(v)}</b></span>`).join("");
+}
+
+// ---------- components ------------------------------------------------------
+const GHOST = `<svg viewBox="0 0 64 64" class="ghost" aria-hidden="true"><path d="M32 4C18 4 10 15 10 28v30l7-6 7 6 8-6 8 6 7-6 7 6V28C54 15 46 4 32 4z" fill="var(--text)" opacity=".92"/><circle cx="24" cy="28" r="5" fill="var(--bg)"/><circle cx="40" cy="28" r="5" fill="var(--bg)"/><ellipse cx="32" cy="42" rx="6" ry="4" fill="var(--bg)"/></svg>`;
+const CALM_GHOST = `<svg viewBox="0 0 64 64" class="ghost" aria-hidden="true"><path d="M32 4C18 4 10 15 10 28v30l7-6 7 6 8-6 8 6 7-6 7 6V28C54 15 46 4 32 4z" fill="var(--text)" opacity=".92"/><path d="M20 28q4-4 8 0M36 28q4-4 8 0" stroke="var(--bg)" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M25 40q7 6 14 0" stroke="var(--bg)" stroke-width="3" fill="none" stroke-linecap="round"/></svg>`;
+const ROOMS = {
+  lounge: [6, 6, 124, 116], main_stage: [134, 6, 160, 116], green_room: [298, 6, 96, 116],
+  entrance: [6, 126, 84, 128], workshop: [94, 126, 112, 128], catering_coffee_bar: [210, 126, 116, 128], network_closet: [330, 126, 64, 128],
+};
+const center = s => { const r = ROOMS[s] || ROOMS.main_stage; return [r[0] + r[2] / 2, r[1] + r[3] / 2]; };
+const radars = new Map();
+const COMPONENT_TIPS = {
+  ThreatBanner: "What is happening, in one line, with the entity and its severity.",
+  CalmStatus: "Shown for false alarms: why it is safe, so nobody panics.",
+  EMFRadar: "Live electromagnetic field reading against normal levels. The model sets the sweep speed: faster means more urgent.",
+  Thermometer: "The cold spot against normal room temperature. Entities drain heat.",
+  Floorplan: "The loft map. The haunted sector glows, sealed zones are hatched, the ghost floats where it was seen, dots are people.",
+  CivilianTracker: "How many people are at risk, where they are, and how to get them out.",
+  NetworkNodes: "The loft's 12 network switches. Flickering squares are the ones failing.",
+  CounterMeasureSelector: "Counter-measures retrieved from the lore library for this entity. Click one to add it to the dispatch.",
+  RealityCheck: "The Field Researcher's mundane explanation, with sources You.com actually returned.",
+  DispatchConsole: "The alert for #loft-incident. Edit the text if you like, then press Dispatch.",
+};
+
+const RENDER = {
+  ThreatBanner: p => ({ cls: `wide banner sev-${p.severity}`, title: "",
+    html: `${GHOST}<div><div class="kind"><span data-tip-title="ThreatBanner" data-tip="${COMPONENT_TIPS.ThreatBanner}">Threat</span></div><div class="line">${esc(p.headline)}</div>
+      <span class="tag status-${p.severity === "low" ? "warning" : "danger"}">${esc(p.severity)}</span> <span class="muted">entity: ${esc(p.entity)}</span></div>` }),
+  CalmStatus: p => ({ cls: "wide calm", title: "",
+    html: `${CALM_GHOST}<div><div class="kind"><span data-tip-title="CalmStatus" data-tip="${COMPONENT_TIPS.CalmStatus}">All clear</span></div><div class="line" style="font-size:22px;font-weight:800;margin:2px 0 6px">${esc(p.message)}</div><div class="muted">${esc(p.explanation)}</div></div>` }),
+  EMFRadar: p => ({ title: "EMF radar",
+    html: `<div class="radar"><canvas width="300" height="300" data-radar></canvas><div>
+      <div class="big status-${p.status}">${esc(p.current_value)}<small>mG</small></div>
+      <div class="muted">baseline ≤ ${esc(p.baseline_max)} mG · ${(p.current_value / (p.baseline_max || 1)).toFixed(1)}×</div>
+      <div style="margin-top:8px"><span class="tag status-${p.status}">${{ rising: "▲ rising", falling: "▼ falling", steady: "■ steady" }[p.trend] || p.trend}</span></div></div></div>`,
+    after: el => startRadar(el, p) }),
+  Thermometer: p => {
+    const pct = Math.max(4, Math.min(100, ((p.temp_c + 20) / 60) * 100)), base = ((p.baseline_min_c + 20) / 60) * 100;
+    return { title: "Cold spot",
+      html: `<div class="thermo"><svg viewBox="0 0 40 140" width="46"><rect x="13" y="6" width="14" height="110" rx="7" fill="var(--bg2)" stroke="var(--line)"/>
+        <rect x="16" y="${116 - pct * 1.1}" width="8" height="${pct * 1.1}" rx="4" fill="${p.status === "ok" ? "var(--ok)" : "var(--accent2)"}"/>
+        <line x1="6" x2="34" y1="${116 - base * 1.1}" y2="${116 - base * 1.1}" stroke="var(--warn)" stroke-dasharray="3 3"/>
+        <circle cx="20" cy="124" r="12" fill="${p.status === "ok" ? "var(--ok)" : "var(--accent2)"}"/></svg>
+        <div><div class="big status-${p.status}">${esc(p.temp_c)}<small>°C</small></div><div class="muted">normal ≥ ${esc(p.baseline_min_c)} °C</div>
+        ${p.temp_c < p.baseline_min_c ? `<div class="muted" style="margin-top:6px">❄ ${(p.baseline_min_c - p.temp_c).toFixed(0)}° below normal: the entity is draining heat</div>` : ""}</div></div>` };
+  },
+  Floorplan: p => {
+    const rooms = Object.entries(ROOMS).map(([id, [x, y, w, h]]) => {
+      const cls = ["room", id === p.highlight_sector && "hot", (p.isolated_zones || []).includes(id) && id !== p.highlight_sector && "sealed"].filter(Boolean).join(" ");
+      return `<rect class="${cls}" x="${x}" y="${y}" width="${w}" height="${h}" rx="8"><title>${label(id)}</title></rect>
+        <text x="${x + 8}" y="${y + 16}">${label(id)}</text>${(p.isolated_zones || []).includes(id) ? `<text class="sealtxt" x="${x + 8}" y="${y + h - 8}">sealed</text>` : ""}`;
+    }).join("");
+    const people = (p.civilians || []).flatMap(c => { const [cx, cy] = center(c.sector);
+      return Array.from({ length: Math.min(c.count, 8) }, (_, i) => `<circle cx="${cx - 24 + (i % 4) * 14}" cy="${cy + 18 + Math.floor(i / 4) * 14}" r="5" fill="${c.status === "pinned" ? "var(--danger)" : c.status === "safe" ? "var(--ok)" : "var(--warn)"}"><title>${c.count} ${c.status}</title></circle>`); }).join("");
+    const [gx, gy] = center(p.ghost_sector);
+    return { cls: "wide floor", title: "Floorplan · AWS Builder Loft",
+      html: `<svg viewBox="0 0 400 260" role="img" aria-label="Floorplan with the haunted sector highlighted">
+        <defs><pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="var(--bg2)"/><line x1="0" y1="0" x2="0" y2="8" stroke="var(--warn)" stroke-width="2" opacity=".5"/></pattern></defs>
+        ${rooms}${people}
+        <g class="ghostmark"><path transform="translate(${gx - 14} ${gy - 30}) scale(.45)" d="M32 4C18 4 10 15 10 28v30l7-6 7 6 8-6 8 6 7-6 7 6V28C54 15 46 4 32 4z" fill="var(--text)"/><circle cx="${gx - 3.2}" cy="${gy - 17.4}" r="2.2" fill="var(--bg)"/><circle cx="${gx + 4}" cy="${gy - 17.4}" r="2.2" fill="var(--bg)"/></g>
+      </svg><div class="legend"><span style="--c:var(--danger)">haunted / pinned</span><span style="--c:var(--warn)">sealed / evacuating</span><span style="--c:var(--ok)">safe</span></div>` };
+  },
+  CivilianTracker: p => ({ title: "Civilians",
+    html: `<div class="big status-${p.status}">${esc(p.pinned)}<small>${p.pinned === 1 ? "person" : "people"} at risk</small></div>
+      <div class="people">${Array.from({ length: Math.min(p.pinned, 16) }, () => `<span class="person ${p.status === "ok" ? "safe" : "pinned"}"></span>`).join("") || `<span class="muted">nobody at risk</span>`}</div>
+      <div class="muted">📍 ${esc(label(p.location))}</div><div style="margin-top:6px">${esc(p.extraction_note)}</div>` }),
+  NetworkNodes: p => ({ title: "Network nodes",
+    html: `<div class="big status-${p.nodes_affected ? "danger" : "ok"}">${esc(p.nodes_affected)}<small>of ${esc(p.total_nodes)} down</small></div>
+      <div class="nodes">${Array.from({ length: p.total_nodes || 12 }, (_, i) => `<span class="node ${i < p.nodes_affected ? "down" : ""}"></span>`).join("")}</div><div class="muted">${esc(p.note)}</div>` }),
+  CounterMeasureSelector: p => ({ title: `Counter-measures vs ${esc(p.target_entity)}`,
+    html: `<div class="options">${p.options.map(o => `<button class="option ${o.name === p.recommended ? "sel" : ""}" data-cm="${esc(o.name)}" data-tip-title="${esc(label(o.name))}" data-tip="Click to choose this counter-measure; it is added to the end of the dispatch draft.">
+      ${o.name === p.recommended ? "<em>RECOMMENDED</em>" : ""}<b>${esc(label(o.name))}</b><span>${esc(o.why)}</span></button>`).join("")}</div>`,
+    after: el => el.querySelectorAll(".option").forEach(b => b.onclick = () => {
+      el.querySelectorAll(".option").forEach(x => x.classList.toggle("sel", x === b)); chosen = b.dataset.cm; refreshDraft(); }) }),
+  RealityCheck: p => ({ title: "Reality check · You.com",
+    html: `<div>${esc(p.verdict)}</div>${p.claims.length ? "" : `<p class="muted searching">🔎 The Field Researcher is still searching the web…</p>`}<ul class="claims">${p.claims.map(c => { let host = c.url; try { host = new URL(c.url).hostname.replace(/^www\./, ""); } catch {}
+      return `<li>${esc(c.text)}<br><a href="${esc(c.url)}" target="_blank" rel="noopener" data-tip-title="Source" data-tip="Opens the page You.com returned for this claim.">↗ ${esc(host)}</a></li>`; }).join("")}</ul>` }),
+  DispatchConsole: p => ({ cls: "dispatch", title: `Dispatch → ${esc(p.channel)}`,
+    html: `<span class="tag status-${p.priority === "routine" ? "ok" : "danger"}">${esc(p.priority)}</span>
+      <textarea class="mono" data-draft style="margin-top:10px" data-tip-title="Alert text" data-tip="The model drafted this line. Edit it freely before sending.">${esc(p.draft)}</textarea>
+      <button class="fire" data-fire data-tip-title="Dispatch" data-tip="${status.dispatch_mode === "live" ? "Posts this text to the venue&#39;s #loft-incident Discord channel, for real." : "Dry run: shows what would be posted, without posting."}">👻 DISPATCH TO ${esc(p.channel.toUpperCase())}</button><div class="result muted" data-result>via the venue webhook · ${esc(status.dispatch_mode === "live" ? "LIVE: posts for real" : "dry run")}</div>`,
+    after: el => { baseDraft = p.draft; refreshDraft();
+      el.querySelector("[data-fire]").onclick = () => { const content = el.querySelector("[data-draft]").value;
+        if (!send({ type: "dispatch", content })) return toast("Offline: dispatch needs the server.");
+        el.querySelector("[data-fire]").disabled = true; el.querySelector("[data-result]").textContent = "dispatching…"; }; } }),
+};
+let chosen = null, baseDraft = "";
+function refreshDraft() {
+  const ta = document.querySelector("[data-draft]"); if (!ta) return;
+  ta.value = baseDraft.replace(/ · deploy [\w-]+$/, "") + (chosen ? ` · deploy ${chosen}` : "");
+}
+
+function startRadar(card, p) {
+  const c = card.querySelector("[data-radar]"); if (!c) return;
+  const ctx = c.getContext("2d"), css = getComputedStyle(document.body), W = 300, R = 140;
+  const blips = Array.from({ length: Math.max(1, Math.min(14, Math.round(p.current_value / (p.baseline_max || 5)))) }, () => [Math.random() * Math.PI * 2, 20 + Math.random() * (R - 30)]);
+  const speed = (Math.PI * 2) / Math.max(400, (p.refresh_rate_ms || 100) * 20);
+  let a = 0, last = performance.now(), id;
+  const col = p.status === "danger" ? css.getPropertyValue("--danger") : p.status === "warning" ? css.getPropertyValue("--warn") : css.getPropertyValue("--ok");
+  const tick = now => {
+    if (!c.isConnected) return cancelAnimationFrame(id);
+    a = (a + speed * (now - last)) % (Math.PI * 2); last = now;
+    ctx.clearRect(0, 0, W, W); ctx.save(); ctx.translate(W / 2, W / 2);
+    ctx.strokeStyle = css.getPropertyValue("--line"); ctx.lineWidth = 2;
+    [R, R * .66, R * .33].forEach(r => { ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.stroke(); });
+    ctx.beginPath(); ctx.moveTo(-R, 0); ctx.lineTo(R, 0); ctx.moveTo(0, -R); ctx.lineTo(0, R); ctx.stroke();
+    const g = ctx.createConicGradient ? ctx.createConicGradient(a - .9, 0, 0) : null;
+    if (g) { g.addColorStop(0, "transparent"); g.addColorStop(.14, col.trim() + "88"); g.addColorStop(.15, "transparent"); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill(); }
+    blips.forEach(([ang, r]) => { const d = ((a - ang) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2), alpha = Math.max(0, 1 - d / 2.5);
+      ctx.fillStyle = col.trim(); ctx.globalAlpha = .25 + alpha * .75; ctx.beginPath(); ctx.arc(Math.cos(ang) * r, Math.sin(ang) * r, 5 + alpha * 3, 0, Math.PI * 2); ctx.fill(); });
+    ctx.restore(); ctx.globalAlpha = 1; id = requestAnimationFrame(tick);
+  };
+  id = requestAnimationFrame(tick);
+}
+
+// ---------- grid reconciliation ---------------------------------------------
+function placeCard(comp, index) {
+  const spec = RENDER[comp.component]; if (!spec) return;
+  $("#empty")?.remove();
+  const grid = $("#grid"), out = spec(comp);
+  let card = grid.querySelector(`[data-c="${comp.component}"]`);
+  const fresh = !card;
+  if (fresh) { card = document.createElement("article"); card.dataset.c = comp.component; }
+  else if (card.dataset.props !== JSON.stringify(comp)) { card.classList.add("changed"); setTimeout(() => card.classList.remove("changed"), 1600); }
+  card.dataset.props = JSON.stringify(comp); card.dataset.pass = pass;
+  card.className = `card ${out.cls || ""}` + (card.classList.contains("changed") ? " changed" : "");
+  card.innerHTML = (out.title ? `<div class="kind"><span data-tip-title="${esc(comp.component)}" data-tip="${esc(COMPONENT_TIPS[comp.component] || "")}">${esc(comp.component)}</span><i data-tip-title="Placed by the model" data-tip="The model chose this panel and put it in position ${index + 1}. Nothing here is a fixed template.">model-placed #${index + 1}</i></div><h3>${out.title}</h3>` : "") + out.html;
+  const at = grid.children[index];
+  if (at !== card) grid.insertBefore(card, at || null);
+  out.after?.(card);
+}
+function settle(manifest) {
+  const keep = new Set(manifest.ui_components_ordered.map(c => c.component));
+  document.querySelectorAll("#grid .card[data-c]").forEach(card => {
+    if (!keep.has(card.dataset.c)) { card.classList.add("leaving"); setTimeout(() => card.remove(), 450); }
+  });
+  manifest.ui_components_ordered.forEach((c, i) => placeCard(c, i));
+  document.body.dataset.theme = manifest.theme;
+  $("#headline").textContent = manifest.headline;
+}
+function renderSnapshot(s) {
+  $("#grid").innerHTML = ""; chosen = null;
+  if (s.facts) facts(s.facts);
+  settle(s.manifest);
+}
+
+// ---------- timeline ---------------------------------------------------------
+// An exported file carries its own night; a first visit, or the page opened with no server, shows the recorded one.
+let snapshots = window.__SNAPSHOT__ || store.load();
+if (!snapshots.length && window.__DEMO_SNAPSHOT__) snapshots = window.__DEMO_SNAPSHOT__;
+function drawTimeline(active) {
+  const ul = $("#timeline");
+  if (!snapshots.length) return;
+  ul.innerHTML = snapshots.map((s, i) => `<li data-i="${i}" class="${i === active ? "on" : ""}"><time>${new Date(s.at).toLocaleTimeString()} · ${esc(label(s.facts?.incident_class || ""))}</time>${esc(s.text.slice(0, 90))}${s.text.length > 90 ? "…" : ""}</li>`).reverse().join("");
+  ul.querySelectorAll("li").forEach(li => li.onclick = () => { renderSnapshot(snapshots[+li.dataset.i]); drawTimeline(+li.dataset.i); });
+}
+
+// ---------- connection -------------------------------------------------------
+let ws, status = { dispatch_mode: "dry" }, pass = 0, current = null, busy = false, nightQueue = [];
+function send(msg) { if (ws?.readyState === 1) { ws.send(JSON.stringify(msg)); return true; } return false; }
+function toast(t) { const el = $("#toast"); el.textContent = t; el.classList.add("show"); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove("show"), 6000); }
+function setConn(on) {
+  $("#conn").className = "pill " + (on ? "live" : "off");
+  $("#conn").textContent = on ? "station online" : window.__SNAPSHOT__ ? "offline snapshot" : "offline · last known state";
+}
+function summon(text) {
+  text = (text || "").trim(); if (!text) return;
+  if (!send({ type: "incident", text })) return toast("The station is offline. Start the server (./run.sh) to summon a new layout.");
+  busy = true; $("#summon").disabled = true; current = { text, at: Date.now() }; $("#intake").value = text;
+  stage("read", "reading the raw stream"); $("#whisper").innerHTML = "";
+}
+function connect() {
+  if (window.__SNAPSHOT__) return setConn(false);
+  ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`);
+  ws.onopen = () => setConn(true);
+  ws.onclose = () => { setConn(false); setTimeout(connect, 3000); };
+  ws.onmessage = e => {
+    const m = JSON.parse(e.data);
+    if (m.type === "stage") stage(m.stage === "ground" ? "ground" : m.stage, m.detail);
+    else if (m.type === "facts") { facts(m.facts); current.facts = m.facts; }
+    else if (m.type === "lore") stage("ground", `lore via ${m.method}: ${m.lore.length} counters`);
+    else if (m.type === "research") whisper(m.queries.length ? `Field Researcher searched: ${m.queries.join(" · ")}${m.finding ? " → " + m.finding : ""}` : "Field Researcher: fixed reality-check search");
+    else if (m.type === "compose_start") { pass++; $("#model").textContent = "model: " + m.model; }
+    else if (m.type === "whisper") whisper(m.text);
+    else if (m.type === "head") { $("#headline").textContent = m.headline; if (m.theme) document.body.dataset.theme = m.theme; }
+    else if (m.type === "component") placeCard(m.component, m.index);
+    else if (m.type === "manifest" && m.partial) settle(m.manifest);
+    else if (m.type === "manifest") {
+      settle(m.manifest); current.manifest = m.manifest; snapshots.push(current); store.save(snapshots); drawTimeline(snapshots.length - 1);
+      busy = false; $("#summon").disabled = false; $("#whisper").innerHTML = "";
+      if (nightQueue.length) setTimeout(() => summon(nightQueue.shift()), 2500); else $("#play").disabled = false;
+    }
+    else if (m.type === "dispatch") {
+      const r = document.querySelector("[data-result]"), b = document.querySelector("[data-fire]");
+      if (b) b.disabled = false;
+      if (r) r.innerHTML = m.sent ? `<span class="status-ok">✓ posted to #loft-incident via ${esc(m.via)}</span>` : `<span class="status-warning">${esc(m.via)}: ${esc(m.detail)}</span><br><span class="mono">${esc(m.content)}</span>`;
+    }
+    else if (m.type === "warning") toast(m.text);
+    else if (m.type === "error") { toast("⚠ " + m.text); busy = false; $("#summon").disabled = false; $("#play").disabled = false; nightQueue = []; stage("read", "error: try again"); }
+  };
+}
+
+// ---------- tooltips + guide ---------------------------------------------------
+const tipEl = Object.assign(document.createElement("div"), { className: "tip", role: "tooltip" });
+document.body.append(tipEl);
+let tipFor = null;
+function hideTip() { tipEl.classList.remove("show"); tipFor = null; }
+function showTip(el) {
+  tipFor = el;
+  tipEl.innerHTML = (el.dataset.tipTitle ? `<b>${esc(el.dataset.tipTitle)}</b>` : "") + esc(el.dataset.tip);
+  const r = el.getBoundingClientRect(), t = tipEl.getBoundingClientRect();
+  const x = Math.max(8, Math.min(r.left + r.width / 2 - t.width / 2, innerWidth - t.width - 8));
+  const below = r.bottom + 8, y = below + t.height > innerHeight - 8 ? r.top - t.height - 8 : below;
+  tipEl.style.left = x + "px"; tipEl.style.top = Math.max(8, y) + "px";
+  tipEl.classList.add("show");
+}
+document.addEventListener("pointerover", e => { const el = e.target.closest("[data-tip]"); if (!el || !el.dataset.tip) return hideTip(); if (el !== tipFor) showTip(el); });
+document.addEventListener("focusin", e => { const el = e.target.closest("[data-tip]"); if (el?.dataset.tip) showTip(el); });
+document.addEventListener("focusout", hideTip);
+addEventListener("scroll", hideTip, true);
+const help = $("#help");
+$("#helpBtn").onclick = () => { hideTip(); help.showModal(); };
+$("#helpClose").onclick = () => help.close();
+help.addEventListener("click", e => { if (e.target === help) help.close(); });
+document.addEventListener("keydown", e => { if (e.key === "?" && !/TEXTAREA|INPUT/.test(document.activeElement.tagName)) { hideTip(); help.showModal(); } });
+
+// ---------- wiring -------------------------------------------------------------
+drawStages();
+$("#summon").onclick = () => summon($("#intake").value);
+$("#intake").addEventListener("keydown", e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) summon($("#intake").value); });
+$("#reset").onclick = () => { send({ type: "reset" }); $("#grid").innerHTML = ""; $("#headline").textContent = ""; $("#facts").innerHTML = ""; drawStages(); document.body.dataset.theme = "spectral-goth-dark"; toast("New incident: the next report starts a fresh station."); };
+$("#export").onclick = () => {
+  const html = "<!doctype html>\n" + document.documentElement.outerHTML.replace("<script>", `<script>window.__SNAPSHOT__=${JSON.stringify(snapshots).replace(/</g, "\\u003c")};<\/script><script>`);
+  const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(new Blob([html], { type: "text/html" })), download: `booard-room-${Date.now()}.html` }); a.click();
+};
+fetch("/api/status").then(r => r.json()).then(s => { status = s;
+  $("#mode").textContent = `dispatch: ${s.dispatch_mode === "live" ? "LIVE" : "dry run"} · ${s.dispatch_via}`; $("#model").textContent = "model: " + s.compose_model; }).catch(() => { $("#mode").textContent = "dispatch: offline"; });
+fetch("/api/night").then(r => r.json()).then(n => {
+  $("#presets").innerHTML = n.presets.map((p, i) => `<button class="chip" data-i="${i}" data-tip-title="${esc(p.label)}" data-tip="${esc(p.tip || "Loads this report and summons the station.")}">${esc(p.label)}</button>`).join("");
+  $("#presets").querySelectorAll(".chip").forEach(b => b.onclick = () => { $("#intake").value = n.presets[+b.dataset.i].text; summon($("#intake").value); });
+  $("#play").onclick = () => { send({ type: "reset" }); $("#grid").innerHTML = ""; nightQueue = [...n.night]; $("#play").disabled = true; const first = nightQueue.shift(); $("#intake").value = first; summon(first); };
+}).catch(() => { $("#play").disabled = true; });
+if (snapshots.length) { renderSnapshot(snapshots[snapshots.length - 1]); drawTimeline(snapshots.length - 1); }
+connect();
+</script>
+</body>
+</html>

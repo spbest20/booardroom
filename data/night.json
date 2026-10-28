@@ -1,0 +1,15 @@
+{
+  "title": "The Night of Edition 003",
+  "note": "Line 1 is the event's fixture (fixtures/haunted-dashboard.json, raw_incident_stream only). The rest are our own incident stream.",
+  "presets": [
+    {"label": "👻 Level-5 phantom", "tip": "The event's own fixture: a level-5 phantom at the coffee bar with 4 engineers pinned.", "text": "ALERT: Reports of a level-5 Phantom apparition at the AWS Builder Loft catering sector. Entities are disrupting the local network nodes. 4 engineers are currently pinned behind the coffee bar. Ambient temperature dropped to -4C. EMF emissions registering at 98 milligauss and climbing rapidly. Traditional security systems completely non-responsive."},
+    {"label": "🌫️ Fog machine?", "tip": "A false alarm. Watch the station stay calm and explain why.", "text": "uh hi, someone in the lounge says there's a ghost?? it's misty and green. EMF meter says 2 mG, temp 22C. pretty sure the DJ just turned on the fog machine and the green lasers lol"},
+    {"label": "🔌 Network poltergeist", "tip": "A haunting in the server rack. Brings up the network panel.", "text": "Server rack in the network closet is rebooting itself every 40s. Knocking sounds inside the rack, EMF 61 mG, cold spot 9C right at the patch panel. 7 of 12 switches flapping. Nobody inside, door locked."}
+  ],
+  "night": [
+    "ALERT: Reports of a level-5 Phantom apparition at the AWS Builder Loft catering sector. Entities are disrupting the local network nodes. 4 engineers are currently pinned behind the coffee bar. Ambient temperature dropped to -4C. EMF emissions registering at 98 milligauss and climbing rapidly. Traditional security systems completely non-responsive.",
+    "UPDATE 21:07 - EMF now 131 mG. Phantom drifting from the coffee bar toward the main stage. Temp -7C. Engineers still pinned, one is reciting the AWS shared responsibility model to calm it down.",
+    "UPDATE 21:12 - Salt line holding at the coffee bar entrance. 2 of the 4 engineers crawled out through the workshop door. EMF dropping to 74 mG. Main stage sealed.",
+    "UPDATE 21:20 - All 4 engineers out and safe in the lounge. EMF 9 mG and falling, temperature back to 17C. Residual echo near the espresso machine, low confidence."
+  ]
+}

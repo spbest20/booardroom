@@ -1,0 +1,20 @@
+[project]
+name = "booard-room"
+version = "1.0.0"
+description = "A spooky tactical command station that designs its own interface from messy incident reports."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10,<3.14"
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+# The formatter owns line length; prompts and regexes stay readable as written.
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["ignore::DeprecationWarning:crewai.*", "ignore::ImportWarning"]

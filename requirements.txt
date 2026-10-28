@@ -1,0 +1,9 @@
+# Same CrewAI pins as the event template (mcp 2.x breaks crewai-tools' adapter)
+crewai==1.15.2
+mcp~=1.26.0
+fastapi>=0.115
+uvicorn[standard]>=0.30
+httpx
+openai>=1.40
+python-dotenv
+pytest
