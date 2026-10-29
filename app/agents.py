@@ -27,17 +27,34 @@ from .models import IncidentFacts
 from .parasail import EXTRACT_PROMPT, PARASAIL_URL, _transient
 
 RESEARCH_TIMEOUT_S = 20
+INTAKE_TIMEOUT_S = 45
+LLM_TIMEOUT_S = 20
 MAX_SEARCHES = 2
+
+
+class ResearchClaim(BaseModel):
+    text: str = Field(description="One short factual sentence, in your own words, supported by the result")
+    url: str = Field(description="The URL of the search result that supports it, exactly as returned")
 
 
 class ResearchBrief(BaseModel):
     queries: list[str] = Field(description="The searches you ran, in order")
     finding: str = Field(description="One sentence: the most plausible mundane explanation, or that none fits")
+    claims: list[ResearchClaim] = Field(default=[], description="Two or three claims from results you saw, best first")
 
 
 def _llm(settings: Settings, model: str) -> LLM:
     # Bare model id + provider="openai": the prefix form falls through to LiteLLM.
-    return LLM(model=model, provider="openai", base_url=PARASAIL_URL, api_key=settings.parasail_api_key, temperature=0)
+    # A short timeout: a dead connection to a shared engine must fail over, not hang the station.
+    return LLM(
+        model=model,
+        provider="openai",
+        base_url=PARASAIL_URL,
+        api_key=settings.parasail_api_key,
+        temperature=0,
+        timeout=LLM_TIMEOUT_S,
+        max_retries=1,
+    )
 
 
 class StationAgents:
@@ -85,7 +102,7 @@ class StationAgents:
             )
 
         prompt = f"Previous facts: {previous.model_dump_json() if previous else 'none'}\n\nNew log:\n{raw}"
-        facts = await self._race(analyst, prompt, IncidentFacts)
+        facts = await asyncio.wait_for(self._race(analyst, prompt, IncidentFacts), INTAKE_TIMEOUT_S)
         return merge_instruments(raw, facts)
 
     async def research(self, raw: str, previous: IncidentFacts | None) -> tuple[list[Evidence], ResearchBrief | None]:
@@ -110,7 +127,8 @@ class StationAgents:
             backstory=(
                 "You are the station's skeptic with a search engine. Search for what could physically cause the "
                 "readings (EMF levels, cold spots, failing network gear) in an office building. Run at most two "
-                "focused searches with you_web_search, then report what you found. Never invent a source."
+                "focused searches with you_web_search, then report what you found, with two or three claims "
+                "that each cite the result supporting them. Never invent a source."
             ),
             tools=[you_web_search],
             llm=self.llm,

@@ -166,8 +166,8 @@ def _checked(
         return None
     if comp["component"] == "DispatchConsole":
         comp["channel"] = "#loft-incident"  # the venue's one escalation channel
-    if comp["component"] == "NetworkNodes" and comp["total_nodes"] <= 0:
-        comp["total_nodes"] = 12  # the loft's switch count when the model leaves it out
+    if comp["component"] == "NetworkNodes" and comp["total_nodes"] < max(comp["nodes_affected"], 4):
+        comp["total_nodes"] = 12  # the loft has 12 switches; "1 of 1 down" reads as a broken grid
     if comp["component"] == "RealityCheck":
         comp["claims"] = [c for c in comp["claims"] if c["url"] in urls]
         if not comp["claims"]:
@@ -185,11 +185,16 @@ def _checked(
     return comp
 
 
-def reality_panel(finding: str, evidence: list[dict]) -> dict | None:
-    """The RealityCheck filled from the Field Researcher's own results: its finding, and excerpts it found."""
+def reality_panel(finding: str, evidence: list[dict], picked: list[dict] | None = None) -> dict | None:
+    """The RealityCheck filled from the Field Researcher's own results: its finding, and the claims it picked.
+
+    Picked claims must cite a URL the search returned; without any, excerpts from the results stand in."""
     if not evidence:
         return None
-    claims = [{"text": _first_sentence(e["text"]) or e["title"], "url": e["url"]} for e in evidence[:3]]
+    urls = {e["url"] for e in evidence}
+    claims = [c for c in (picked or []) if c.get("url") in urls and c.get("text")][:3]
+    if not claims:
+        claims = [{"text": _first_sentence(e["text"]) or e["title"], "url": e["url"]} for e in evidence[:3]]
     verdict = finding or "Everyday explanations for these readings, from the live web."
     return RealityCheck(component="RealityCheck", verdict=verdict, claims=claims).model_dump()
 

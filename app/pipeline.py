@@ -30,6 +30,7 @@ class IncidentState(BaseModel):
     lore: list[dict] = []
     evidence: list[dict] = []
     finding: str = ""
+    claims: list[dict] = []
     manifest: Manifest | None = None
 
 
@@ -95,13 +96,14 @@ class IncidentFlow(Flow[IncidentState]):
             }
         )
         found = [e.as_dict() for e in evidence]
+        self.state.claims = [c.model_dump() for c in brief.claims] if brief else []
         await self.emit({"type": "evidence", "evidence": found})
         return found, brief.finding if brief else ""
 
     def _fill_reality(self, manifest: Manifest) -> tuple[Manifest, int | None]:
         """Put the researcher's RealityCheck into the slot the model reserved (or before Dispatch)."""
         comps = [c.model_dump() for c in manifest.ui_components_ordered]
-        panel = reality_panel(self.state.finding, self.state.evidence)
+        panel = reality_panel(self.state.finding, self.state.evidence, self.state.claims)
         at = next((i for i, c in enumerate(comps) if c["component"] == "RealityCheck"), None)
         if panel is None:
             if at is not None:

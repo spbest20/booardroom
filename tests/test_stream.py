@@ -86,3 +86,17 @@ def test_a_pending_reality_check_keeps_its_slot_and_is_filled_from_the_researche
     assert panel["verdict"] == "A UPS explains it."
     assert panel["claims"] == [{"text": "Transformers emit strong fields.", "url": "https://a.org"}]
     assert reality_panel("x", []) is None
+
+
+def test_the_researchers_claims_are_used_only_when_they_cite_a_returned_url():
+    from app.parasail import reality_panel
+
+    evidence = [{"url": "https://a.org", "title": "A", "text": "Transformers emit strong fields. More."}]
+    picked = [
+        {"text": "UPS units emit strong fields.", "url": "https://a.org"},
+        {"text": "Invented.", "url": "https://nope.example"},
+    ]
+    assert reality_panel("f", evidence, picked)["claims"] == [
+        {"text": "UPS units emit strong fields.", "url": "https://a.org"}
+    ]
+    assert reality_panel("f", evidence, [picked[1]])["claims"][0]["text"] == "Transformers emit strong fields."
