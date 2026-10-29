@@ -8,6 +8,12 @@ Paste a panicked report: *"4 engineers are pinned behind the coffee bar, EMF 98 
 
 Nothing on screen is a template. The page only knows how to draw each kind of panel; the model decides everything else.
 
+## Demo
+
+![Boo-ard Room laying out a station for the event's level-5 phantom incident: civilians first, then the floorplan](docs/screenshot.png)
+
+**[▶ Watch the 2:45 demo](docs/demo.mp4)** (captioned, no audio): the event's own incident streaming in, hover explanations, the agent's reality check with real sources, dispatch, a four-report night updating in place, a fog-machine false alarm and a network haunting. Recorded on October 28 against a dry-run copy of the station, so nothing was posted.
+
 ## Quick start
 
 Needs Python 3.10–3.13.
@@ -87,7 +93,7 @@ The brief's sample manifest is never shown to the model, so it can't be echoed b
 | `web/index.html` | The whole UI in one file: no external fonts or libraries |
 | `web/snapshot.js` | A recorded night, shown offline |
 | `data/lore.json` · `data/night.json` | Counter-measure library · presets and the four-report night |
-| `tests/` | Streaming parser, guardrails, agents' fallbacks, dispatch (10 tests) |
+| `tests/` | Streaming parser, guardrails, agents' fallbacks, dispatch (11 tests) |
 
 ## Configuration
 
@@ -105,7 +111,7 @@ All settings come from `.env` (see `.env.example`; it is gitignored):
 ## Development
 
 ```bash
-.venv/bin/python -m pytest          # 10 tests, no keys needed
+.venv/bin/python -m pytest          # 11 tests, no keys needed
 .venv/bin/pip install ruff && .venv/bin/ruff check app tests && .venv/bin/ruff format --check app tests
 ```
 
